@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>Anyware.TaskManagement.API</RootNamespace>
+		<AssemblyName>Anyware.TaskManagement.API</AssemblyName>
+		<UserSecretsId>anyware-task-management-api</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Anyware.TaskManagement.Application\Anyware.TaskManagement.Application.csproj" />
+		<ProjectReference Include="..\Anyware.TaskManagement.Infrastructure\Anyware.TaskManagement.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+		<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+	</ItemGroup>
+</Project>
