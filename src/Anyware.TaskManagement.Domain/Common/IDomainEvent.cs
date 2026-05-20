@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Domain.Common
 {
-    internal interface IDomainEvent
+    public interface IDomainEvent
     {
+        DateTime OccurredOn { get; }
     }
 }

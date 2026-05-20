@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Common.Exceptions
 {
-    public sealed class ConflictException : Exception
+    internal static class CacheKeys
     {
-        public ConflictException(string message)
-            : base(message) { }
+        internal static string Task(Guid taskId) => $"task:{taskId}";
     }
 }

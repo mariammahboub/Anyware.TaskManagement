@@ -2,6 +2,7 @@
 using Anyware.TaskManagement.Application.Common.Interfaces;
 using Anyware.TaskManagement.Application.Features.Tasks.Commands.Queries.DTOs;
 using Anyware.TaskManagement.Domain.Entities;
+using Anyware.TaskManagement.Domain.Interfaces;
 using Anyware.TaskManagement.Domain.Interfaces.Repositories;
 using AutoMapper;
 using MediatR;
@@ -13,30 +14,54 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Tasks.Commands.CreateTask
 {
-    internal sealed class CreateTaskCommandHandler(
-       ITaskRepository taskRepository,
-       IUnitOfWork unitOfWork,
-       ICurrentUserService currentUser,
-       ITaskQueue taskQueue,
-       IMapper mapper)
-       : IRequestHandler<CreateTaskCommand, TaskDto>
+    internal sealed class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, TaskDto>
     {
-        public async Task<TaskDto> Handle(CreateTaskCommand request, CancellationToken ct)
+        private readonly ITaskRepository _taskRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserService _currentUser;
+        private readonly ITaskQueue _taskQueue;
+        private readonly IMapper _mapper;
+
+        public CreateTaskCommandHandler(
+            ITaskRepository taskRepository,
+            IUnitOfWork unitOfWork,
+            ICurrentUserService currentUser,
+            ITaskQueue taskQueue,
+            IMapper mapper)
         {
-            bool duplicate = await taskRepository.ExistsByTitleAndUserAndDateAsync(
-                request.Title, currentUser.UserId, DateTime.UtcNow.Date, ct);
+            _taskRepository = taskRepository;
+            _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
+            _taskQueue = taskQueue;
+            _mapper = mapper;
+        }
 
-            if (duplicate)
+        public async Task<TaskDto> Handle(
+            CreateTaskCommand request,
+            CancellationToken cancellationToken)
+        {
+            var isDuplicate = await _taskRepository.ExistsByTitleAndUserAndDateAsync(
+                request.Title,
+                _currentUser.UserId,
+                DateTime.UtcNow.Date,
+                cancellationToken);
+
+            if (isDuplicate)
                 throw new ConflictException(
-                    $"A task with title '{request.Title}' already exists for today.");
+                    $"You already have a task titled '{request.Title}' created today. " +
+                    "Duplicate task titles are not allowed within the same day.");
 
-            var task = TaskItem.Create(request.Title, request.Description, request.Priority, currentUser.UserId);
-            await taskRepository.AddAsync(task, ct);
-            await unitOfWork.SaveChangesAsync(ct);
+            var task = TaskItem.Create(
+                request.Title,
+                request.Description,
+                request.Priority,
+                _currentUser.UserId);
 
-            taskQueue.Enqueue(task.Id);
+            await _taskRepository.AddAsync(task, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _taskQueue.Enqueue(task.Id);
 
-            return mapper.Map<TaskDto>(task);
+            return _mapper.Map<TaskDto>(task);
         }
     }
 }

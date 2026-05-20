@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Common.Interfaces
 {
-    public interface ITaskQueue
+    public interface IPasswordHasher
     {
-        void Enqueue(Guid taskId);
-        Task<Guid> DequeueAsync(CancellationToken cancellationToken);
+
+        string Hash(string password);
+
+
+        bool Verify(string password, string hash);
     }
 }

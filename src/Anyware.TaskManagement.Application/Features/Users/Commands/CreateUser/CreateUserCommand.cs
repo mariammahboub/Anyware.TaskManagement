@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Anyware.TaskManagement.Application.Features.Users.Queries.DTOs;
+using MediatR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,10 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Users.Commands.CreateUser
 {
-    internal class CreateUserCommand
-    {
-    }
+    public sealed record CreateUserCommand(
+      string Name,
+      string Email,
+      string Password,
+      string Role = "User"
+  ) : IRequest<UserDto>;
 }

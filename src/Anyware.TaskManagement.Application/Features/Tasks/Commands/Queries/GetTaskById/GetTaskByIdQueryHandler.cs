@@ -13,29 +13,55 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Tasks.Commands.Queries.GetTaskById
 {
-    internal sealed class GetTaskByIdQueryHandler(
-        ITaskRepository taskRepository,
-        ICacheService cache,
-        ICurrentUserService currentUser,
-        IMapper mapper)
-        : IRequestHandler<GetTaskByIdQuery, TaskDto>
+    internal sealed class GetTaskByIdQueryHandler : IRequestHandler<GetTaskByIdQuery, TaskDto>
     {
-        private static string CacheKey(Guid id) => $"task:{id}";
+        private readonly ITaskRepository _taskRepository;
+        private readonly ICacheService _cache;
+        private readonly ICurrentUserService _currentUser;
+        private readonly IMapper _mapper;
 
-        public async Task<TaskDto> Handle(GetTaskByIdQuery request, CancellationToken ct)
+        public GetTaskByIdQueryHandler(
+            ITaskRepository taskRepository,
+            ICacheService cache,
+            ICurrentUserService currentUser,
+            IMapper mapper)
         {
-            var cached = await cache.GetAsync<TaskDto>(CacheKey(request.TaskId), ct);
-            if (cached is not null) return cached;
+            _taskRepository = taskRepository;
+            _cache = cache;
+            _currentUser = currentUser;
+            _mapper = mapper;
+        }
 
-            var task = await taskRepository.GetByIdAsync(request.TaskId, ct)
+        public async Task<TaskDto> Handle(
+            GetTaskByIdQuery request,
+            CancellationToken cancellationToken)
+        {
+            var cacheKey = CacheKeys.Task(request.TaskId);
+            var cached = await _cache.GetAsync<TaskDto>(cacheKey, cancellationToken);
+
+            if (cached is not null)
+            {
+                EnforceOwnership(cached);
+                return cached;
+            }
+
+            var task = await _taskRepository.GetByIdAsync(
+                request.TaskId, cancellationToken)
                 ?? throw new NotFoundException(nameof(TaskItem), request.TaskId);
 
-            if (task.UserId != currentUser.UserId && !currentUser.IsAdmin)
-                throw new UnauthorizedException();
+            var dto = _mapper.Map<TaskDto>(task);
+            EnforceOwnership(dto);
+            await _cache.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(10), cancellationToken);
 
-            var dto = mapper.Map<TaskDto>(task);
-            await cache.SetAsync(CacheKey(request.TaskId), dto, TimeSpan.FromMinutes(10), ct);
             return dto;
         }
+
+        private void EnforceOwnership(TaskDto dto)
+        {
+            if (!_currentUser.IsAdmin && dto.UserId != _currentUser.UserId)
+                throw new ForbiddenException(
+                    "You do not have permission to view this task.");
+        }
+
     }
 }

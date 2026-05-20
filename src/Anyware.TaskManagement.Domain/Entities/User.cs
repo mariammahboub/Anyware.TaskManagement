@@ -8,24 +8,56 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Domain.Entities
 {
+
     public sealed class User : BaseEntity
     {
+
         public string Name { get; private set; } = default!;
+
         public string Email { get; private set; } = default!;
         public string PasswordHash { get; private set; } = default!;
         public UserRole Role { get; private set; }
-        public bool IsDeleted { get; private set; }     
+        public bool IsDeleted { get; private set; }
 
-        private User() { }  
-
-        public static User Create(string name, string email, string passwordHash, UserRole role = UserRole.User)
+        private User() { }
+        public static User Create(
+            string name,
+            string email,
+            string passwordHash,
+            UserRole role = UserRole.User)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(name);
-            ArgumentException.ThrowIfNullOrWhiteSpace(email);
-            return new User { Name = name, Email = email, PasswordHash = passwordHash, Role = role };
-        }
+            ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+            ArgumentException.ThrowIfNullOrWhiteSpace(email, nameof(email));
+            ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash, nameof(passwordHash));
 
-        public void SoftDelete() { IsDeleted = true; SetUpdatedAt(); }
-        public void UpdateName(string name) { Name = name; SetUpdatedAt(); }
-    }
-}
+            return new User
+            {
+                Name = name.Trim(),
+                Email = email.Trim().ToLowerInvariant(),
+                PasswordHash = passwordHash,
+                Role = role
+            };
+        }
+        public void UpdateName(string name)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+            Name = name.Trim();
+            MarkAsUpdated();
+        }
+        public void UpdatePasswordHash(string newPasswordHash)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(newPasswordHash, nameof(newPasswordHash));
+            PasswordHash = newPasswordHash;
+            MarkAsUpdated();
+        }
+        public void SoftDelete()
+        {
+            IsDeleted = true;
+            MarkAsUpdated();
+        }
+    public void Restore()
+        {
+            IsDeleted = false;
+            MarkAsUpdated();
+        }
+    } }

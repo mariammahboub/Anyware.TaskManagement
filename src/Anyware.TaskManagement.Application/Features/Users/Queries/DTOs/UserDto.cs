@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Users.Queries.DTOs
 {
-    internal class UserDto
-    {
-    }
+    public sealed record UserDto(
+     Guid Id,
+     string Name,
+     string Email,
+     string Role,
+     DateTime CreatedAt,
+     DateTime? UpdatedAt
+ );
 }

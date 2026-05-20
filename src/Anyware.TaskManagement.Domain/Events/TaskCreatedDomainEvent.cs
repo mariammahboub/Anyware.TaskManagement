@@ -7,5 +7,11 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Domain.Events
 {
-    public sealed record TaskCreatedDomainEvent(Guid TaskId, Guid UserId) : IDomainEvent;
+    public sealed record TaskCreatedDomainEvent(
+        Guid TaskId,
+        Guid UserId
+    ) : IDomainEvent
+    {
+        public DateTime OccurredOn { get; } = DateTime.UtcNow;
+    }
 }

@@ -9,7 +9,7 @@ namespace Anyware.TaskManagement.Application.Common.Interfaces
 {
     public interface IJwtService
     {
-        string GenerateToken(User user);
-        string GenerateRefreshToken();    
+        string GenerateAccessToken(User user);
+        string GenerateRefreshToken();
     }
 }

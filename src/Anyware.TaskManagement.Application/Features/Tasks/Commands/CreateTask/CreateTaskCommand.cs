@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace Anyware.TaskManagement.Application.Features.Tasks.Commands.CreateTask
 {
     public sealed record CreateTaskCommand(
-     string Title,
-     string Description,
-     TaskPriority Priority
- ) : IRequest<TaskDto>;
+        string Title,
+        string Description,
+        TaskPriority Priority
+    ) : IRequest<TaskDto>;
 
 }

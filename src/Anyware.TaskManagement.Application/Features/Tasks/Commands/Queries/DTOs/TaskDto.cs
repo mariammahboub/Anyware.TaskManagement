@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Tasks.Commands.Queries.DTOs
 {
-    internal class TaskDto
-    {
-    }
+    public sealed record TaskDto(
+        Guid Id,
+        string Title,
+        string Description,
+        string Status,
+        string Priority,
+        Guid UserId,
+        DateTime CreatedAt,
+        DateTime? UpdatedAt
+    );
 }

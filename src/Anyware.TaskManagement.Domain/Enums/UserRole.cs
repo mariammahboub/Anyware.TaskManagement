@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Domain.Enums
 {
-    public enum UserRole { User = 0, Admin = 1 }
-
+    public enum UserRole
+    {
+        User = 0,
+        Admin = 1
+    }
 }
