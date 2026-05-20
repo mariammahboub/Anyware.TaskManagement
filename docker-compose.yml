@@ -1,0 +1,79 @@
+﻿version: '3.8'
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anyware-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=anyware_tasks;Username=postgres;Password=postgres
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__Key=AnywareSoftware_SuperSecretKey_2024_MustBe32Chars!
+      - Jwt__Issuer=AnywareTaskManagementAPI
+      - Jwt__Audience=AnywareClients
+      - Jwt__ExpiryHours=1
+      - Jwt__RefreshTokenExpiryDays=7
+      - AdminSeed__Name=Anyware Admin
+      - AdminSeed__Email=admin@anyware.com
+      - AdminSeed__Password=Admin@123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - anyware-network
+    restart: on-failure:3
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: anyware-postgres
+    environment:
+      POSTGRES_DB: anyware_tasks
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - anyware-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d anyware_tasks"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: anyware-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - anyware-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  anyware-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

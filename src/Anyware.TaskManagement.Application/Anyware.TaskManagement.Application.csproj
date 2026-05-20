@@ -19,5 +19,14 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Anyware.TaskManagement.Application.Tests</_Parameter1>
+		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Anyware.TaskManagement.API.Tests</_Parameter1>
+		</AssemblyAttribute>
 	</ItemGroup>
 </Project>

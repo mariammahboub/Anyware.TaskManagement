@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Auth.DTOs
 {
-    internal class LoginRequest
-    {
-    }
+    public sealed record LoginRequest(
+       string Email,
+       string Password
+   );
+
 }

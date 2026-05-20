@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Auth.DTOs
 {
-    internal class RegisterRequest
-    {
-    }
+    public sealed record RegisterRequest(
+      string Name,
+      string Email,
+      string Password
+  );
 }

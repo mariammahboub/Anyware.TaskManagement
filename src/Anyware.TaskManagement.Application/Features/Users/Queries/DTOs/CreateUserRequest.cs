@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Users.Queries.DTOs
 {
-    internal class CreateUserRequest
-    {
-    }
+    public sealed record CreateUserRequest(
+     string Name,
+     string Email,
+     string Password,
+     string Role = "User"
+ );
 }
