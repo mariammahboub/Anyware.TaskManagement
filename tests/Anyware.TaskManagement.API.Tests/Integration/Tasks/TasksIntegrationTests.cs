@@ -1,12 +1,12 @@
 ﻿using Anyware.TaskManagement.API.Tests.Fixtures;
 using Anyware.TaskManagement.API.Tests.Helpers;
 using Anyware.TaskManagement.Application.Common.Interfaces;
-using Anyware.TaskManagement.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Anyware.TaskManagement.API.Tests.Infrastructure;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;

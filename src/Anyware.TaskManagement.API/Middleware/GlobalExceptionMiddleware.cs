@@ -22,6 +22,7 @@ namespace Anyware.TaskManagement.API.Middleware
             _next = next;
             _logger = logger;
         }
+
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -33,9 +34,11 @@ namespace Anyware.TaskManagement.API.Middleware
                 await HandleExceptionAsync(context, ex);
             }
         }
+
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             var (statusCode, message, errors) = MapException(exception);
+
             if (statusCode >= 500)
             {
                 _logger.LogError(
@@ -70,10 +73,20 @@ namespace Anyware.TaskManagement.API.Middleware
             await context.Response.WriteAsync(
                 JsonSerializer.Serialize(response, JsonOptions));
         }
+
         private static (int statusCode, string message, IDictionary<string, string[]>? errors)
             MapException(Exception exception)
             => exception switch
             {
+                FluentValidation.ValidationException fluentEx =>
+                    ((int)HttpStatusCode.UnprocessableEntity,
+                     "One or more validation errors occurred.",
+                     fluentEx.Errors
+                         .GroupBy(e => e.PropertyName)
+                         .ToDictionary(
+                             g => g.Key,
+                             g => g.Select(e => e.ErrorMessage).ToArray())),
+
                 ValidationException ex =>
                     ((int)HttpStatusCode.UnprocessableEntity,
                      "One or more validation errors occurred.",
