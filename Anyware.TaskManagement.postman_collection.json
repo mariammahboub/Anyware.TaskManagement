@@ -1,77 +1,135 @@
 ﻿{
   "info": {
     "name": "Anyware Task Management API",
+    "_postman_id": "anyware-task-mgmt-2024",
+    "description": "Complete API collection for Anyware Task Management system.\n\n**Admin Credentials:**\n- Email: admin@anyware.com\n- Password: Admin@123\n\n**Base URL:** http://localhost:5000\n\n**How to use:**\n1. Run 'Register' or 'Login' first\n2. Token is saved automatically to {{accessToken}}\n3. All protected endpoints use {{accessToken}} automatically",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl",      "value": "http://localhost:8080" },
-    { "key": "accessToken",  "value": "" },
-    { "key": "refreshToken", "value": "" },
-    { "key": "taskId",       "value": "" },
-    { "key": "userId",       "value": "" }
+    { "key": "baseUrl",      "value": "http://localhost:5000", "type": "string" },
+    { "key": "accessToken",  "value": "",                      "type": "string" },
+    { "key": "refreshToken", "value": "",                      "type": "string" },
+    { "key": "taskId",       "value": "",                      "type": "string" },
+    { "key": "userId",       "value": "",                      "type": "string" }
   ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
   "item": [
     {
-      "name": "Auth",
+      "name": "🔐 Auth",
       "item": [
         {
           "name": "Register",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/auth/register",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@anyware.com\",\n  \"password\": \"Test@1234!\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Login (Admin)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set('accessToken', json.accessToken);",
-                  "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken',  body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "    pm.test('Register returns 201', () => pm.response.to.have.status(201));",
+                  "    pm.test('Access token returned',  () => pm.expect(body.accessToken).to.not.be.empty);",
+                  "    pm.test('Refresh token returned', () => pm.expect(body.refreshToken).to.not.be.empty);",
+                  "}"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@1234!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "description": "Register a new user account. Returns JWT access + refresh tokens.\n\n**Expected:** 201 Created\n**Errors:** 409 Conflict (email exists), 422 Validation error"
+          }
+        },
+        {
+          "name": "Login — Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken',  body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "    pm.test('Login returns 200',      () => pm.response.to.have.status(200));",
+                  "    pm.test('Role is Admin',          () => pm.expect(body.role).to.eql('Admin'));",
+                  "    pm.test('Access token returned',  () => pm.expect(body.accessToken).to.not.be.empty);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@anyware.com\",\n  \"password\": \"Admin@123\"\n}"
-            }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "description": "Login with seeded admin credentials.\n\n**Expected:** 200 OK with JWT tokens\n**Note:** Token is automatically saved to {{accessToken}}"
           }
         },
         {
-          "name": "Login (User)",
+          "name": "Login — Regular User",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set('accessToken', json.accessToken);",
-                  "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken',  body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "    pm.test('Login returns 200', () => pm.response.to.have.status(200));",
+                  "    pm.test('Role is User',      () => pm.expect(body.role).to.eql('User'));",
+                  "}"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/login",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"test@anyware.com\",\n  \"password\": \"Test@1234!\"\n}"
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@1234!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "description": "Login as a regular user (must register first).\n\n**Expected:** 200 OK"
+          }
+        },
+        {
+          "name": "Login — Invalid Credentials (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 401 for wrong password', () => pm.response.to.have.status(401));"
+                ]
+              }
             }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@anyware.com\",\n  \"password\": \"WrongPassword!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "description": "Test invalid credentials.\n\n**Expected:** 401 Unauthorized"
           }
         },
         {
@@ -81,90 +139,55 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set('accessToken', json.accessToken);",
-                  "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken',  body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "    pm.test('Refresh returns 200',         () => pm.response.to.have.status(200));",
+                  "    pm.test('New access token returned',   () => pm.expect(body.accessToken).to.not.be.empty);",
+                  "    pm.test('New refresh token returned',  () => pm.expect(body.refreshToken).to.not.be.empty);",
+                  "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/refresh",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"accessToken\": \"{{accessToken}}\",\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-            }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api","auth","refresh"] },
+            "description": "Exchange expired access token for a new pair using refresh token.\n\n**Expected:** 200 OK with new token pair\n**Note:** Refresh token rotation — old token is invalidated"
           }
         },
         {
-          "name": "Revoke (Logout)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/auth/revoke",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Users",
-      "item": [
-        {
-          "name": "Get Current User (me)",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/users/me",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
-          }
-        },
-        {
-          "name": "Get All Users (Admin)",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/users",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
-          }
-        },
-        {
-          "name": "Create User (Admin)",
+          "name": "Revoke Token (Logout)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json.id) pm.collectionVariables.set('userId', json.id);"
+                  "pm.test('Revoke returns 204', () => pm.response.to.have.status(204));",
+                  "pm.collectionVariables.set('accessToken', '');",
+                  "pm.collectionVariables.set('refreshToken', '');"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/users",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"New Staff\",\n  \"email\": \"staff@anyware.com\",\n  \"password\": \"Staff@1234!\",\n  \"role\": \"User\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete User (Admin)",
-          "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/users/{{userId}}",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/revoke", "host": ["{{baseUrl}}"], "path": ["api","auth","revoke"] },
+            "description": "Revoke the current user's refresh token (logout).\n\n**Expected:** 204 No Content\n**Requires:** Valid Bearer token"
           }
         }
       ]
     },
     {
-      "name": "Tasks",
+      "name": "✅ Tasks",
       "item": [
         {
           "name": "Create Task",
@@ -173,126 +196,355 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json.id) pm.collectionVariables.set('taskId', json.id);"
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('taskId', body.id);",
+                  "    pm.test('Create task returns 201',        () => pm.response.to.have.status(201));",
+                  "    pm.test('Task has ID',                    () => pm.expect(body.id).to.not.be.empty);",
+                  "    pm.test('Status is Pending',              () => pm.expect(body.status).to.eql('Pending'));",
+                  "    pm.test('Location header is present',     () => pm.expect(pm.response.headers.get('Location')).to.not.be.null);",
+                  "    console.log('Task ID saved:', body.id);",
+                  "}"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/tasks",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Fix login bug\",\n  \"description\": \"Submit button unresponsive on Safari\",\n  \"priority\": \"high\"\n}"
-            }
+              "raw": "{\n  \"title\": \"My First Task\",\n  \"description\": \"Task created via Postman\",\n  \"priority\": \"High\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api","tasks"] },
+            "description": "Create a new task. Task belongs to the authenticated user.\n\n**Priority values:** Low, Medium, High, Critical\n**Expected:** 201 Created with Location header\n**Business Rule:** Duplicate title on same day returns 409"
           }
         },
         {
-          "name": "Create Task - Duplicate (409)",
+          "name": "Create Task — Missing Title (expect 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 422 for missing title', () => pm.response.to.have.status(422));",
+                  "pm.test('Errors field present', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.errors).to.not.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/tasks",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Fix login bug\",\n  \"description\": \"Duplicate title - should return 409\",\n  \"priority\": \"low\"\n}"
-            }
+              "raw": "{\n  \"title\": \"\",\n  \"description\": \"No title provided\",\n  \"priority\": \"Low\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api","tasks"] },
+            "description": "Validation test — title is required.\n\n**Expected:** 422 Unprocessable Entity with field errors"
           }
         },
         {
-          "name": "Get All Tasks (sorted)",
+          "name": "Get Task By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get task returns 200',    () => pm.response.to.have.status(200));",
+                  "pm.test('Task ID matches',         () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.id).to.eql(pm.collectionVariables.get('taskId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/tasks",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["api","tasks","{{taskId}}"] },
+            "description": "Get a specific task by ID. Uses Redis caching.\n\n**First request:** Loads from DB, caches result\n**Subsequent requests:** Served from Redis\n**Expected:** 200 OK\n**Errors:** 403 (other user's task), 404 (not found)"
           }
         },
         {
-          "name": "Get Task By Id (cache miss)",
+          "name": "Get Task By ID — Not Found (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 404 for non-existent task', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/tasks/{{taskId}}",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000", "host": ["{{baseUrl}}"], "path": ["api","tasks","00000000-0000-0000-0000-000000000000"] },
+            "description": "Test 404 for a task that doesn't exist.\n\n**Expected:** 404 Not Found"
           }
         },
         {
-          "name": "Get Task By Id (cache hit)",
+          "name": "Get All Tasks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get all tasks returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns an array',          () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Sorted by priority desc then createdAt asc', () => {",
+                  "    const tasks = pm.response.json();",
+                  "    if (tasks.length > 1) {",
+                  "        const priorities = { Critical: 4, High: 3, Medium: 2, Low: 1 };",
+                  "        for (let i = 0; i < tasks.length - 1; i++) {",
+                  "            pm.expect(priorities[tasks[i].priority] || 0).to.be.at.least(priorities[tasks[i+1].priority] || 0);",
+                  "        }",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/tasks/{{taskId}}",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api","tasks"] },
+            "description": "Get all tasks for the authenticated user.\n\n**Sorting:** Priority DESC, then CreatedAt ASC\n**Ownership:** Only returns the current user's tasks\n**Expected:** 200 OK"
           }
         },
         {
-          "name": "Update Task Status - InProgress",
+          "name": "Update Task Status — Pending → InProgress",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Update status returns 204', () => pm.response.to.have.status(204));",
+                  "pm.test('No content in response',    () => pm.expect(pm.response.body).to.be.empty);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PATCH",
-            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"newStatus\": \"inProgress\"\n}"
-            }
+              "raw": "{\n  \"newStatus\": \"InProgress\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}/status", "host": ["{{baseUrl}}"], "path": ["api","tasks","{{taskId}}","status"] },
+            "description": "Update task status. Also invalidates Redis cache for this task.\n\n**Valid transitions:** Pending → InProgress, InProgress → Done\n**Invalid:** Done → InProgress returns 400\n**Expected:** 204 No Content\n**Cache:** Entry removed after update"
           }
         },
         {
-          "name": "Update Task Status - Done",
+          "name": "Update Task Status — Done → InProgress (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 400 for invalid transition', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PATCH",
-            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"newStatus\": \"done\"\n}"
-            }
+              "raw": "{\n  \"newStatus\": \"InProgress\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks/{{taskId}}/status", "host": ["{{baseUrl}}"], "path": ["api","tasks","{{taskId}}","status"] },
+            "description": "Business rule: Cannot move a Done task back to InProgress.\n\n**Prerequisite:** Task must already be in Done status\n**Expected:** 400 Bad Request"
           }
         },
         {
-          "name": "Update Task Status - Done to Pending (400)",
+          "name": "Create Duplicate Task (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 409 for duplicate title today', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "PATCH",
-            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
-            ],
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"newStatus\": \"pending\"\n}"
-            }
+              "raw": "{\n  \"title\": \"My First Task\",\n  \"description\": \"Duplicate title same day\",\n  \"priority\": \"Low\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/tasks", "host": ["{{baseUrl}}"], "path": ["api","tasks"] },
+            "description": "Business rule: Cannot create two tasks with same title on the same day.\n\n**Expected:** 409 Conflict\n**Prerequisite:** 'Create Task' must have been run first"
           }
         }
       ]
     },
     {
-      "name": "Health",
+      "name": "👤 Users",
       "item": [
         {
-          "name": "Liveness",
+          "name": "Get Current User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get profile returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has email field',         () => pm.expect(pm.response.json().email).to.not.be.empty);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/health"
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api","users","me"] },
+            "description": "Get the currently authenticated user's profile.\n\n**Expected:** 200 OK with user data\n**Requires:** Valid Bearer token"
           }
         },
         {
-          "name": "Readiness (DB + Redis)",
+          "name": "Get All Users (Admin only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get all users returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns an array',          () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Array not empty',           () => pm.expect(pm.response.json().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/health/ready"
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] },
+            "description": "List all users. Admin only.\n\n**Expected:** 200 OK\n**Requires:** Admin Bearer token\n**Errors:** 403 Forbidden (non-admin)"
+          }
+        },
+        {
+          "name": "Create User (Admin only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('userId', body.id);",
+                  "    pm.test('Create user returns 201', () => pm.response.to.have.status(201));",
+                  "    pm.test('User ID returned',        () => pm.expect(body.id).to.not.be.empty);",
+                  "    console.log('User ID saved:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Staff Member\",\n  \"email\": \"staff@anyware.com\",\n  \"password\": \"Staff@Pass1!\",\n  \"role\": \"User\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] },
+            "description": "Create a new user. Admin only.\n\n**Role values:** User, Admin\n**Expected:** 201 Created\n**Errors:** 403 (non-admin), 409 (email exists), 422 (validation)"
+          }
+        },
+        {
+          "name": "Delete User (Admin only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Delete user returns 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","users","{{userId}}"] },
+            "description": "Soft-delete a user by ID. Admin only.\n\n**Expected:** 204 No Content\n**Errors:** 403 (non-admin or deleting own admin account), 404 (user not found)\n**Prerequisite:** Run 'Create User' first to set {{userId}}"
+          }
+        },
+        {
+          "name": "Get All Users — As Regular User (expect 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 403 for non-admin', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] },
+            "description": "Test that regular users cannot access admin endpoints.\n\n**Prerequisite:** Login as regular user first\n**Expected:** 403 Forbidden"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏥 Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Health returns 200',   () => pm.response.to.have.status(200));",
+                  "pm.test('Status is Healthy',    () => pm.expect(pm.response.json().status).to.eql('Healthy'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+            "description": "Check overall API health.\n\n**Expected:** 200 OK with status: Healthy\n**No auth required**"
+          }
+        },
+        {
+          "name": "Health Check — Readiness",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Readiness returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health/ready", "host": ["{{baseUrl}}"], "path": ["health","ready"] },
+            "description": "Check if API is ready (DB + Redis connected).\n\n**Expected:** 200 OK\n**No auth required**"
           }
         }
       ]
