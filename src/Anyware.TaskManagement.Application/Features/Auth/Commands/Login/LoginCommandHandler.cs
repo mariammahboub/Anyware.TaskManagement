@@ -1,14 +1,11 @@
 ﻿using Anyware.TaskManagement.Application.Common.Exceptions;
 using Anyware.TaskManagement.Application.Common.Interfaces;
 using Anyware.TaskManagement.Application.Features.Auth.DTOs;
+using Anyware.TaskManagement.Domain.Interfaces;
 using Anyware.TaskManagement.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 namespace Anyware.TaskManagement.Application.Features.Auth.Commands.Login
 {
     internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
@@ -16,17 +13,20 @@ namespace Anyware.TaskManagement.Application.Features.Auth.Commands.Login
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtService _jwtService;
+        private readonly IUnitOfWork _unitOfWork;      
         private readonly IConfiguration _configuration;
 
         public LoginCommandHandler(
             IUserRepository userRepository,
             IPasswordHasher passwordHasher,
             IJwtService jwtService,
+            IUnitOfWork unitOfWork,                            
             IConfiguration configuration)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _jwtService = jwtService;
+            _unitOfWork = unitOfWork;                  
             _configuration = configuration;
         }
 
@@ -43,12 +43,16 @@ namespace Anyware.TaskManagement.Application.Features.Auth.Commands.Login
             var accessToken = _jwtService.GenerateAccessToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
             var expiryHours = _configuration.GetValue<int>("Jwt:ExpiryHours");
-            var accessExpiry = DateTime.UtcNow.AddHours(expiryHours);
+            var refreshDays = _configuration.GetValue<int>("Jwt:RefreshTokenExpiryDays");
+
+            user.SetRefreshToken(refreshToken, refreshDays);
+            _userRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new AuthResponse(
                 AccessToken: accessToken,
                 RefreshToken: refreshToken,
-                AccessTokenExpiry: accessExpiry,
+                AccessTokenExpiry: DateTime.UtcNow.AddHours(expiryHours),
                 UserId: user.Id,
                 Name: user.Name,
                 Email: user.Email,

@@ -16,7 +16,14 @@ namespace Anyware.TaskManagement.Infrastructure.Configurations
         {
             builder.ToTable("users");
             builder.HasKey(u => u.Id);
+            builder.Property(u => u.RefreshToken)
+    .HasColumnName("refresh_token")
+    .HasMaxLength(500)
+    .IsRequired(false);
 
+            builder.Property(u => u.RefreshTokenExpiry)
+                .HasColumnName("refresh_token_expiry")
+                .IsRequired(false);
             builder.Property(u => u.Id)
                 .HasColumnName("id")
                 .ValueGeneratedNever();

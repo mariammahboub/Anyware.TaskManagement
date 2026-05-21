@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace Anyware.TaskManagement.Infrastructure
 {
 
@@ -98,7 +97,7 @@ namespace Anyware.TaskManagement.Infrastructure
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddSingleton<IJwtService, JwtService>();
             services.AddSingleton<IPasswordHasher, PasswordHasher>();
-
+services.AddScoped<IUnitOfWork, UnitOfWork>();
             return services;
         }
         private static IServiceCollection AddBackgroundProcessing(

@@ -1,4 +1,5 @@
-﻿using Anyware.TaskManagement.Application.Common.Interfaces;
+﻿using Anyware.TaskManagement.Application.Common.Exceptions;
+using Anyware.TaskManagement.Application.Common.Interfaces;
 using Anyware.TaskManagement.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -67,5 +68,46 @@ namespace Anyware.TaskManagement.Infrastructure.Identity
         new Claim(ClaimTypes.Name,               user.Name),
         new Claim(ClaimTypes.Role,               user.Role.ToString()),
     ];
+    
+       public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
+                IssuerSigningKey = GetSigningKey(),
+                ClockSkew = TimeSpan.Zero
+            };
+
+            var handler = new JwtSecurityTokenHandler();
+            ClaimsPrincipal principal;
+
+            try
+            {
+                principal = handler.ValidateToken(token, parameters, out var securityToken);
+
+                if (securityToken is not JwtSecurityToken jwt ||
+                    !jwt.Header.Alg.Equals(
+                        SecurityAlgorithms.HmacSha256,
+                        StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new UnauthorizedException("Invalid access token algorithm.");
+                }
+            }
+            catch (UnauthorizedException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                throw new UnauthorizedException("Invalid access token.");
+            }
+
+            return principal;
+        }
     }
 }

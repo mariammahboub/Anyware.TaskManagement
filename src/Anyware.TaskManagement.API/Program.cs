@@ -60,11 +60,14 @@ try
     await ApplyDatabaseMigrationsAndSeedAsync(app);
 
     app.UseMiddleware<GlobalExceptionMiddleware>();
-    app.UseSerilogRequestLogging(options =>
+    if (!app.Environment.IsEnvironment("Testing"))
     {
-        options.MessageTemplate =
-            "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
-    });
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.MessageTemplate =
+                "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        });
+    }
 
     app.UseSwaggerWithUi();
 

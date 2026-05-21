@@ -18,7 +18,8 @@ namespace Anyware.TaskManagement.Domain.Entities
         public string PasswordHash { get; private set; } = default!;
         public UserRole Role { get; private set; }
         public bool IsDeleted { get; private set; }
-
+        public string? RefreshToken { get; private set; }
+        public DateTime? RefreshTokenExpiry { get; private set; }
         private User() { }
         public static User Create(
             string name,
@@ -38,6 +39,25 @@ namespace Anyware.TaskManagement.Domain.Entities
                 Role = role
             };
         }
+        public void SetRefreshToken(string refreshToken, int expiryDays)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken, nameof(refreshToken));
+            RefreshToken = refreshToken;
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(expiryDays);
+            MarkAsUpdated();
+        }
+
+        public void ClearRefreshToken()
+        {
+            RefreshToken = null;
+            RefreshTokenExpiry = null;
+            MarkAsUpdated();
+        }
+
+        public bool IsRefreshTokenValid(string token)
+            => RefreshToken == token
+               && RefreshTokenExpiry.HasValue
+               && RefreshTokenExpiry.Value > DateTime.UtcNow;
         public void UpdateName(string name)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));

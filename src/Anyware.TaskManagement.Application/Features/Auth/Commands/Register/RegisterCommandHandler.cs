@@ -6,11 +6,6 @@ using Anyware.TaskManagement.Domain.Interfaces;
 using Anyware.TaskManagement.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Anyware.TaskManagement.Application.Features.Auth.Commands.Register
 {
@@ -40,7 +35,6 @@ namespace Anyware.TaskManagement.Application.Features.Auth.Commands.Register
             RegisterCommand request,
             CancellationToken cancellationToken)
         {
-
             var emailTaken = await _userRepository.ExistsByEmailAsync(
                 request.Email, cancellationToken);
 
@@ -50,19 +44,19 @@ namespace Anyware.TaskManagement.Application.Features.Auth.Commands.Register
 
             var passwordHash = _passwordHasher.Hash(request.Password);
             var user = User.Create(request.Name, request.Email, passwordHash);
+            var accessToken = _jwtService.GenerateAccessToken(user);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+            var expiryHours = _configuration.GetValue<int>("Jwt:ExpiryHours");
+            var refreshDays = _configuration.GetValue<int>("Jwt:RefreshTokenExpiryDays");
+            user.SetRefreshToken(refreshToken, refreshDays);
 
             await _userRepository.AddAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var accessToken = _jwtService.GenerateAccessToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
-            var expiryHours = _configuration.GetValue<int>("Jwt:ExpiryHours");
-            var accessExpiry = DateTime.UtcNow.AddHours(expiryHours);
-
             return new AuthResponse(
                 AccessToken: accessToken,
                 RefreshToken: refreshToken,
-                AccessTokenExpiry: accessExpiry,
+                AccessTokenExpiry: DateTime.UtcNow.AddHours(expiryHours),
                 UserId: user.Id,
                 Name: user.Name,
                 Email: user.Email,
