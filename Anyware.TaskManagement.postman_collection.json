@@ -2,11 +2,11 @@
   "info": {
     "name": "Anyware Task Management API",
     "_postman_id": "anyware-task-mgmt-2024",
-    "description": "Complete API collection for Anyware Task Management system.\n\n**Admin Credentials:**\n- Email: admin@anyware.com\n- Password: Admin@123\n\n**Base URL:** http://localhost:5000\n\n**How to use:**\n1. Run 'Register' or 'Login' first\n2. Token is saved automatically to {{accessToken}}\n3. All protected endpoints use {{accessToken}} automatically",
+    "description": "Complete API collection for Anyware Task Management system.\n\n**Admin Credentials:**\n- Email: admin@anyware.com\n- Password: Admin@123\n\n**Base URL:** http://localhost:7012\n\n**How to use:**\n1. Run 'Register' or 'Login' first\n2. Token is saved automatically to {{accessToken}}\n3. All protected endpoints use {{accessToken}} automatically",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl",      "value": "http://localhost:5000", "type": "string" },
+    { "key": "baseUrl",      "value": "http://localhost:7012", "type": "string" },
     { "key": "accessToken",  "value": "",                      "type": "string" },
     { "key": "refreshToken", "value": "",                      "type": "string" },
     { "key": "taskId",       "value": "",                      "type": "string" },
