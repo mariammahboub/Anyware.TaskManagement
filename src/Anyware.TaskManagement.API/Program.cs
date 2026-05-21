@@ -1,4 +1,4 @@
-
+﻿
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +22,13 @@ try
     Log.Information("Starting Anyware Task Management API...");
 
     var builder = WebApplication.CreateBuilder(args);
-    builder.Host.UseSerilog(SerilogConfigurator.Configure());
-
+    if (!builder.Environment.IsEnvironment("Testing"))
+        builder.Host.UseSerilog(SerilogConfigurator.Configure());
     builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(
+        builder.Configuration,
+        builder.Environment);  
 
-    builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services
         .AddControllers()
         .AddJsonOptions(options =>
@@ -43,8 +45,8 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerWithJwt();
 
-    builder.Services.AddJwtAuthentication(builder.Configuration);
-
+    //builder.Services.AddJwtAuthentication(builder.Configuration);
+    builder.Services.AddJwtAuthentication(builder.Configuration, builder.Environment);
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowAll", policy =>
@@ -98,7 +100,11 @@ static async Task ApplyDatabaseMigrationsAndSeedAsync(WebApplication app)
     try
     {
         logger.LogInformation("Applying database migrations...");
-        await db.Database.MigrateAsync();
+        if (db.Database.IsRelational())
+            await db.Database.MigrateAsync();
+        else
+            await db.Database.EnsureCreatedAsync();
+
         logger.LogInformation("Database migrations applied successfully.");
 
         logger.LogInformation("Running database seeders...");

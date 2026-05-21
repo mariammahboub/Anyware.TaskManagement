@@ -8,10 +8,17 @@ namespace Anyware.TaskManagement.API.Extensions
     {
         public static IServiceCollection AddJwtAuthentication(
             this IServiceCollection services,
-            IConfiguration configuration)
+            IConfiguration configuration,
+             IWebHostEnvironment? environment = null)
         {
-            var key = configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+            var key = configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(key))
+            {
+                if (environment?.EnvironmentName == "Testing")
+                    return services;
+
+                throw new InvalidOperationException("Jwt:Key is not configured.");
+            }
             var issuer = configuration["Jwt:Issuer"];
             var audience = configuration["Jwt:Audience"];
 

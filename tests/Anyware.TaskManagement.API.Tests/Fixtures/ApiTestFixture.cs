@@ -44,14 +44,16 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>
 
             Remove<IConnectionMultiplexer>(services);
             Remove<ICacheService>(services);
+
             _cache = new InMemoryCacheService();
             services.AddSingleton<ICacheService>(_cache);
+
             var workerDescriptor = services.FirstOrDefault(d =>
                 d.ImplementationType?.Name == "TaskProcessingWorker");
             if (workerDescriptor is not null)
                 services.Remove(workerDescriptor);
         });
-    }
+    }  
 
     public HttpClient CreateApiClient()
         => CreateClient(new WebApplicationFactoryClientOptions
@@ -67,4 +69,4 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>
         var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(T));
         if (descriptor is not null) services.Remove(descriptor);
     }
-}
+} 
